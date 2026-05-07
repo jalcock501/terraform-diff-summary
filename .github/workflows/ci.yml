@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: python -m pip install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run tests
+        run: poetry run test
+
+      - name: Run Ruff
+        run: poetry run ruff check .
+
+  action-smoke:
+    name: Action smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Write sample Terraform plan JSON
+        run: |
+          cat > "$RUNNER_TEMP/tfplan.json" <<'JSON'
+          {
+            "resource_changes": [
+              {
+                "address": "aws_s3_bucket.version_only",
+                "type": "aws_s3_bucket",
+                "change": {
+                  "actions": ["update"],
+                  "before": {
+                    "tags": {"Name": "same", "Version": "old"},
+                    "tags_all": {"Name": "same", "Version": "old"}
+                  },
+                  "after": {
+                    "tags": {"Name": "same", "Version": "new"},
+                    "tags_all": {"Name": "same", "Version": "new"}
+                  }
+                }
+              },
+              {
+                "address": "aws_s3_bucket.material",
+                "type": "aws_s3_bucket",
+                "change": {
+                  "actions": ["update"],
+                  "before": {
+                    "bucket": "old",
+                    "tags": {"Name": "old", "Version": "old"}
+                  },
+                  "after": {
+                    "bucket": "new",
+                    "tags": {"Name": "new", "Version": "new"}
+                  }
+                }
+              },
+              {
+                "address": "aws_s3_bucket.noop",
+                "type": "aws_s3_bucket",
+                "change": {
+                  "actions": ["no-op"],
+                  "before": {"bucket": "same"},
+                  "after": {"bucket": "same"}
+                }
+              }
+            ]
+          }
+          JSON
+
+      - name: Run local action
+        uses: ./
+        env:
+          GITHUB_STEP_SUMMARY: ${{ runner.temp }}/action-summary.md
+        with:
+          plan-json-path: ${{ runner.temp }}/tfplan.json
+          max-changed-fields: "8"
+
+      - name: Assert action summary
+        run: |
+          test -f "$RUNNER_TEMP/action-summary.md"
+          grep -F "| Resource changes | 2 |" "$RUNNER_TEMP/action-summary.md"
+          grep -F "| Filtered Version tag-only changes | 1 |" "$RUNNER_TEMP/action-summary.md"
+          grep -F "| Changes shown below | 1 |" "$RUNNER_TEMP/action-summary.md"
+          grep -F '`aws_s3_bucket.material`' "$RUNNER_TEMP/action-summary.md"
+          grep -F '`bucket, tags.Name`' "$RUNNER_TEMP/action-summary.md"
+          ! grep -F "aws_s3_bucket.version_only" "$RUNNER_TEMP/action-summary.md"
+          ! grep -F "aws_s3_bucket.noop" "$RUNNER_TEMP/action-summary.md"
+
+  tag:
+    name: Tag validation
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate tag
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import sys
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          expected = f"v{version}"
+
+          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+              sys.exit(f"Tag {tag!r} must look like v1.2.3")
+
+          if tag != expected:
+              sys.exit(f"Tag {tag!r} does not match pyproject version {expected!r}")
+          PY
