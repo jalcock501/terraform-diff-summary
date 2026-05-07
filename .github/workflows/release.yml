@@ -57,8 +57,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           target="$(git rev-list -n 1 "$BUILD_TAG")"
-          git tag -f "$BASE_TAG" "$target"
-          git push --force origin "refs/tags/$BASE_TAG"
+
+          if git rev-parse "$BASE_TAG" >/dev/null 2>&1; then
+            existing_target="$(git rev-list -n 1 "$BASE_TAG")"
+            if [ "$existing_target" != "$target" ]; then
+              echo "Refusing to move existing release tag $BASE_TAG."
+              echo "$BASE_TAG points at $existing_target, but $BUILD_TAG points at $target."
+              exit 1
+            fi
+
+            echo "$BASE_TAG already points at $target; promotion is already done."
+            exit 0
+          fi
+
+          git tag -a "$BASE_TAG" "$target" -m "Release $BASE_TAG"
+          git push origin "refs/tags/$BASE_TAG"
 
       - name: Create GitHub release
         env:
