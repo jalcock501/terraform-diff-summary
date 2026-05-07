@@ -132,10 +132,16 @@ jobs:
           grep -F "| Resource changes | 2 |" "$RUNNER_TEMP/action-summary.md"
           grep -F "| Filtered tag-only changes (Version) | 1 |" "$RUNNER_TEMP/action-summary.md"
           grep -F "| Changes shown below | 1 |" "$RUNNER_TEMP/action-summary.md"
-          grep -F '`aws_s3_bucket.material`' "$RUNNER_TEMP/action-summary.md"
-          grep -F '`bucket, tags.Name`' "$RUNNER_TEMP/action-summary.md"
-          ! grep -F "aws_s3_bucket.version_only" "$RUNNER_TEMP/action-summary.md"
-          ! grep -F "aws_s3_bucket.noop" "$RUNNER_TEMP/action-summary.md"
+          grep -F "\`aws_s3_bucket.material\`" "$RUNNER_TEMP/action-summary.md"
+          grep -F "\`bucket, tags.Name\`" "$RUNNER_TEMP/action-summary.md"
+
+          if grep -F "aws_s3_bucket.version_only" "$RUNNER_TEMP/action-summary.md"; then
+            exit 1
+          fi
+
+          if grep -F "aws_s3_bucket.noop" "$RUNNER_TEMP/action-summary.md"; then
+            exit 1
+          fi
 
   tag:
     name: Tag validation
