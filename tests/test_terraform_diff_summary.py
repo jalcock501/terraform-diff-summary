@@ -318,7 +318,7 @@ def test_script_fails_after_summary_when_visible_destroy_is_present(
     monkeypatch.setenv("FAIL_ON_DESTROY", "true")
     monkeypatch.setenv("FAIL_ON_REPLACE", "false")
 
-    with pytest.raises(SystemExit, match="1 delete change"):
+    with pytest.raises(SystemExit, match="1 destroy change"):
         main()
 
     assert "`aws_s3_bucket.deleted`" in summary_path.read_text(encoding="utf-8")

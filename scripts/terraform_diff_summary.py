@@ -212,6 +212,30 @@ def markdown_row(values: list[str]) -> str:
     return "| " + " | ".join(escaped) + " |"
 
 
+def partition_changes(
+    plan: dict[str, Any],
+    ignored_tag_names: set[str],
+    *,
+    filter_tag_only_changes: bool,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    changes = [
+        change
+        for change in plan.get("resource_changes", [])
+        if is_actionable(change)
+    ]
+    filtered = [
+        change
+        for change in changes
+        if filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_names)
+    ]
+    visible = [
+        change
+        for change in changes
+        if not (filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_names))
+    ]
+    return changes, filtered, visible
+
+
 def render_summary(
     plan: dict[str, Any],
     version_tag_name: str = "Version",
@@ -224,23 +248,11 @@ def render_summary(
     """Render the Terraform summary Markdown."""
     ignored_tag_names = ignored_tag_names or [version_tag_name]
     ignored_tag_name_set = set(ignored_tag_names)
-    changes = [
-        change
-        for change in plan.get("resource_changes", [])
-        if is_actionable(change)
-    ]
-    filtered = [
-        change
-        for change in changes
-        if filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_name_set)
-    ]
-    visible = [
-        change
-        for change in changes
-        if not (
-            filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_name_set)
-        )
-    ]
+    changes, filtered, visible = partition_changes(
+        plan,
+        ignored_tag_name_set,
+        filter_tag_only_changes=filter_tag_only_changes,
+    )
     ignored_tag_label = ", ".join(ignored_tag_names)
 
     lines = [
@@ -312,19 +324,17 @@ def visible_changes(
     *,
     filter_tag_only_changes: bool,
 ) -> list[dict[str, Any]]:
-    ignored_tag_name_set = set(ignored_tag_names)
-    changes = [
-        change
-        for change in plan.get("resource_changes", [])
-        if is_actionable(change)
-    ]
-    return [
-        change
-        for change in changes
-        if not (
-            filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_name_set)
-        )
-    ]
+    _, _, visible = partition_changes(
+        plan,
+        set(ignored_tag_names),
+        filter_tag_only_changes=filter_tag_only_changes,
+    )
+    return visible
+
+
+def count_label(count: int, singular: str, plural: str) -> str:
+    label = singular if count == 1 else plural
+    return f"{count} {label}"
 
 
 def failure_message(
@@ -338,10 +348,12 @@ def failure_message(
     failures = []
 
     if fail_on_destroy and destroy_count:
-        failures.append(f"{destroy_count} delete change(s)")
+        failures.append(count_label(destroy_count, "destroy change", "destroy changes"))
 
     if fail_on_replace and replace_count:
-        failures.append(f"{replace_count} replacement change(s)")
+        failures.append(
+            count_label(replace_count, "replacement change", "replacement changes")
+        )
 
     if failures:
         return "Terraform plan contains " + " and ".join(failures) + "."

@@ -27,7 +27,7 @@ jobs:
           go-version: stable
 
       - name: Install actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
 
       - name: Run actionlint
         run: actionlint
