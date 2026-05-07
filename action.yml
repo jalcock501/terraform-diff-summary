@@ -1,0 +1,30 @@
+name: Terraform Diff Summary
+description: Writes a compact Terraform plan summary to the GitHub Step Summary.
+
+branding:
+  icon: file-text
+  color: purple
+
+inputs:
+  plan-json-path:
+    description: Path to terraform show -json output
+    required: true
+  version-tag-name:
+    description: Tag key to ignore when detecting tag-only changes
+    required: false
+    default: Version
+  max-changed-fields:
+    description: Max changed field paths shown per resource
+    required: false
+    default: "8"
+
+runs:
+  using: composite
+  steps:
+    - name: Write Terraform diff summary
+      shell: bash
+      env:
+        PLAN_JSON_PATH: ${{ inputs.plan-json-path }}
+        VERSION_TAG_NAME: ${{ inputs.version-tag-name }}
+        MAX_CHANGED_FIELDS: ${{ inputs.max-changed-fields }}
+      run: python "$GITHUB_ACTION_PATH/scripts/terraform_diff_summary.py"

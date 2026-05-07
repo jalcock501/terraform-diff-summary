@@ -1,0 +1,27 @@
+[project]
+name = "terraform-diff-summary"
+version = "0.1.0"
+description = "Terraform Plan Markdown Summary GitHub Action"
+authors = [
+    {name = "important+github@jimalcock.dev",email = "important+github@jimalcock.dev"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{ include = "scripts" }]
+
+[tool.poetry.scripts]
+test = "scripts.run_tests:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.3"
+ruff = "^0.14.0"
