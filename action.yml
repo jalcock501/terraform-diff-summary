@@ -29,6 +29,14 @@ inputs:
     description: Markdown heading text for the generated summary
     required: false
     default: Terraform plan summary
+  fail-on-destroy:
+    description: Fail the action when visible delete changes are present
+    required: false
+    default: "false"
+  fail-on-replace:
+    description: Fail the action when visible replacement changes are present
+    required: false
+    default: "false"
   summary-output-path:
     description: Optional path to also append the generated Markdown summary
     required: false
@@ -46,5 +54,7 @@ runs:
         FILTER_TAG_ONLY_CHANGES: ${{ inputs.filter-tag-only-changes }}
         MAX_CHANGED_FIELDS: ${{ inputs.max-changed-fields }}
         SUMMARY_TITLE: ${{ inputs.summary-title }}
+        FAIL_ON_DESTROY: ${{ inputs.fail-on-destroy }}
+        FAIL_ON_REPLACE: ${{ inputs.fail-on-replace }}
         SUMMARY_OUTPUT_PATH: ${{ inputs.summary-output-path }}
       run: python "$GITHUB_ACTION_PATH/scripts/terraform_diff_summary.py"

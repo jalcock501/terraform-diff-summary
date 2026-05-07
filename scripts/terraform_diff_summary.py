@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
 PathParts = tuple[str, ...]
 MISSING = object()
+GROUP_ORDER = ("replace", "delete", "create", "update", "other")
+GROUP_TITLES = {
+    "replace": "Replacements",
+    "delete": "Deletes",
+    "create": "Creates",
+    "update": "Updates",
+    "other": "Other changes",
+}
 
 
 def split_csv(value: str | None) -> list[str]:
@@ -143,6 +152,32 @@ def display_changed_paths(
     return changed_paths(stripped_before, stripped_after, max_changed_fields)
 
 
+def change_actions(change: dict[str, Any]) -> list[str]:
+    actions = change.get("change", {}).get("actions", [])
+    return [str(action) for action in actions]
+
+
+def is_replace(change: dict[str, Any]) -> bool:
+    return set(change_actions(change)) == {"delete", "create"}
+
+
+def is_destroy(change: dict[str, Any]) -> bool:
+    return change_actions(change) == ["delete"]
+
+
+def action_group(change: dict[str, Any]) -> str:
+    actions = change_actions(change)
+    if set(actions) == {"delete", "create"}:
+        return "replace"
+    if actions == ["delete"]:
+        return "delete"
+    if actions == ["create"]:
+        return "create"
+    if actions == ["update"]:
+        return "update"
+    return "other"
+
+
 def is_actionable(change: dict[str, Any]) -> bool:
     return change.get("change", {}).get("actions") != ["no-op"]
 
@@ -225,37 +260,93 @@ def render_summary(
         )
         return "\n".join(lines) + "\n"
 
-    lines.extend(
-        [
-            markdown_row(["Address", "Action", "Type", "Changed fields"]),
-            markdown_row(["---", "---", "---", "---"]),
-        ]
-    )
+    grouped_changes = {
+        group: [change for change in visible if action_group(change) == group]
+        for group in GROUP_ORDER
+    }
 
-    for change in visible:
-        change_body = change.get("change", {})
-        before = change_body.get("before")
-        after = change_body.get("after")
-        changed_fields = display_changed_paths(
-            before,
-            after,
-            ignored_tag_name_set,
-            max_changed_fields,
-            hide_ignored_tags=filter_tag_only_changes,
+    for group in GROUP_ORDER:
+        group_changes = grouped_changes[group]
+        if not group_changes:
+            continue
+
+        lines.extend(
+            [
+                f"#### {GROUP_TITLES[group]} ({len(group_changes)})",
+                "",
+                markdown_row(["Address", "Action", "Type", "Changed fields"]),
+                markdown_row(["---", "---", "---", "---"]),
+            ]
         )
 
-        lines.append(
-            markdown_row(
-                [
-                    f"`{change.get('address', 'unknown')}`",
-                    f"`{','.join(change_body.get('actions', []))}`",
-                    f"`{change.get('type', 'unknown')}`",
-                    f"`{changed_fields}`",
-                ]
+        for change in group_changes:
+            change_body = change.get("change", {})
+            before = change_body.get("before")
+            after = change_body.get("after")
+            changed_fields = display_changed_paths(
+                before,
+                after,
+                ignored_tag_name_set,
+                max_changed_fields,
+                hide_ignored_tags=filter_tag_only_changes,
             )
-        )
+
+            lines.append(
+                markdown_row(
+                    [
+                        f"`{change.get('address', 'unknown')}`",
+                        f"`{','.join(change_body.get('actions', []))}`",
+                        f"`{change.get('type', 'unknown')}`",
+                        f"`{changed_fields}`",
+                    ]
+                )
+            )
+        lines.append("")
 
     return "\n".join(lines) + "\n"
+
+
+def visible_changes(
+    plan: dict[str, Any],
+    ignored_tag_names: list[str],
+    *,
+    filter_tag_only_changes: bool,
+) -> list[dict[str, Any]]:
+    ignored_tag_name_set = set(ignored_tag_names)
+    changes = [
+        change
+        for change in plan.get("resource_changes", [])
+        if is_actionable(change)
+    ]
+    return [
+        change
+        for change in changes
+        if not (
+            filter_tag_only_changes and is_ignored_tag_only(change, ignored_tag_name_set)
+        )
+    ]
+
+
+def failure_message(
+    changes: list[dict[str, Any]],
+    *,
+    fail_on_destroy: bool,
+    fail_on_replace: bool,
+) -> str | None:
+    destroy_count = sum(1 for change in changes if is_destroy(change))
+    replace_count = sum(1 for change in changes if is_replace(change))
+    failures = []
+
+    if fail_on_destroy and destroy_count:
+        failures.append(f"{destroy_count} delete change(s)")
+
+    if fail_on_replace and replace_count:
+        failures.append(f"{replace_count} replacement change(s)")
+
+    if failures:
+        return "Terraform plan contains " + " and ".join(failures) + "."
+
+    return None
 
 
 def env_int(name: str, default: int) -> int:
@@ -276,6 +367,8 @@ def main() -> None:
     filter_tag_only_changes = env_bool("FILTER_TAG_ONLY_CHANGES", True)
     max_changed_fields = env_int("MAX_CHANGED_FIELDS", 8)
     summary_title = os.environ.get("SUMMARY_TITLE") or "Terraform plan summary"
+    fail_on_destroy = env_bool("FAIL_ON_DESTROY", False)
+    fail_on_replace = env_bool("FAIL_ON_REPLACE", False)
 
     plan = json.loads(plan_json_path.read_text(encoding="utf-8"))
     summary = render_summary(
@@ -292,6 +385,19 @@ def main() -> None:
     summary_output_path = os.environ.get("SUMMARY_OUTPUT_PATH")
     if summary_output_path:
         append_summary(Path(summary_output_path), summary)
+
+    shown_changes = visible_changes(
+        plan,
+        ignored_tag_names,
+        filter_tag_only_changes=filter_tag_only_changes,
+    )
+    message = failure_message(
+        shown_changes,
+        fail_on_destroy=fail_on_destroy,
+        fail_on_replace=fail_on_replace,
+    )
+    if message:
+        sys.exit(message)
 
 
 if __name__ == "__main__":

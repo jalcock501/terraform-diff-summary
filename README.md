@@ -26,6 +26,7 @@ sensitive Terraform values into the Step Summary.
   with:
     plan-json-path: tfplan.json
     ignored-tag-names: Version,Build
+    fail-on-replace: "true"
 ```
 
 ## Inputs
@@ -38,6 +39,8 @@ sensitive Terraform values into the Step Summary.
 | `filter-tag-only-changes` | no | `true` | Hide ignored-tag-only updates. |
 | `max-changed-fields` | no | `8` | Field path cap per resource before `...`. |
 | `summary-title` | no | `Terraform plan summary` | Markdown summary heading. |
+| `fail-on-destroy` | no | `false` | Fail when visible delete changes exist. |
+| `fail-on-replace` | no | `false` | Fail when visible replacement changes exist. |
 | `summary-output-path` | no | n/a | Also append Markdown to this file path. |
 
 ## Output
@@ -54,6 +57,14 @@ Example:
 | Resource changes | 12 |
 | Filtered tag-only changes (Version, Build) | 9 |
 | Changes shown below | 3 |
+
+#### Replacements (1)
+
+| Address | Action | Type | Changed fields |
+|---|---|---|---|
+| `aws_instance.api` | `delete,create` | `aws_instance` | `ami, instance_type` |
+
+#### Updates (2)
 
 | Address | Action | Type | Changed fields |
 |---|---|---|---|
@@ -76,6 +87,8 @@ IGNORED_TAG_NAMES=Version,Build \
 FILTER_TAG_ONLY_CHANGES=true \
 MAX_CHANGED_FIELDS=8 \
 SUMMARY_TITLE="Terraform plan summary" \
+FAIL_ON_DESTROY=false \
+FAIL_ON_REPLACE=true \
 GITHUB_STEP_SUMMARY=/tmp/summary.md \
 python scripts/terraform_diff_summary.py
 ```
@@ -100,3 +113,6 @@ existing JSON plan generated with:
 ```bash
 terraform show -json tfplan > tfplan.json
 ```
+
+`fail-on-destroy` and `fail-on-replace` are evaluated after tag-only filtering.
+Filtered tag-only updates will not cause the action to fail.

@@ -1,6 +1,6 @@
 [project]
 name = "terraform-diff-summary"
-version = "1.0.0"
+version = "1.1.0"
 description = "Terraform Plan Markdown Summary GitHub Action"
 authors = [
     {name = "important+github@jimalcock.dev",email = "important+github@jimalcock.dev"}

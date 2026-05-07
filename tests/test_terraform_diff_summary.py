@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from terraform_diff_summary import (  # noqa: E402
@@ -176,6 +178,45 @@ def test_render_summary_can_disable_tag_only_filtering():
     assert "`tags.Version`" in summary
 
 
+def test_render_summary_groups_visible_changes_by_action():
+    plan = {
+        "resource_changes": [
+            resource_change(
+                "aws_s3_bucket.created",
+                "aws_s3_bucket",
+                ["create"],
+                None,
+                {"bucket": "new"},
+            ),
+            resource_change(
+                "aws_s3_bucket.replaced",
+                "aws_s3_bucket",
+                ["delete", "create"],
+                {"bucket": "old"},
+                {"bucket": "new"},
+            ),
+            resource_change(
+                "aws_s3_bucket.deleted",
+                "aws_s3_bucket",
+                ["delete"],
+                {"bucket": "old"},
+                None,
+            ),
+        ]
+    }
+
+    summary = render_summary(plan, "Version", 8)
+
+    replace_index = summary.index("#### Replacements (1)")
+    delete_index = summary.index("#### Deletes (1)")
+    create_index = summary.index("#### Creates (1)")
+
+    assert replace_index < delete_index < create_index
+    assert "`aws_s3_bucket.replaced`" in summary
+    assert "`aws_s3_bucket.deleted`" in summary
+    assert "`aws_s3_bucket.created`" in summary
+
+
 def test_script_appends_summary_to_github_step_summary(tmp_path, monkeypatch):
     plan_path = tmp_path / "tfplan.json"
     summary_path = tmp_path / "summary.md"
@@ -245,3 +286,75 @@ def test_script_can_append_summary_to_optional_output_path(tmp_path, monkeypatch
     assert "`aws_s3_bucket.example`" in output_summary_path.read_text(
         encoding="utf-8"
     )
+
+
+def test_script_fails_after_summary_when_visible_destroy_is_present(
+    tmp_path, monkeypatch
+):
+    plan_path = tmp_path / "tfplan.json"
+    summary_path = tmp_path / "summary.md"
+    plan_path.write_text(
+        json.dumps(
+            {
+                "resource_changes": [
+                    resource_change(
+                        "aws_s3_bucket.deleted",
+                        "aws_s3_bucket",
+                        ["delete"],
+                        {"bucket": "old"},
+                        None,
+                    )
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("PLAN_JSON_PATH", str(plan_path))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+    monkeypatch.setenv("IGNORED_TAG_NAMES", "Version")
+    monkeypatch.setenv("FILTER_TAG_ONLY_CHANGES", "true")
+    monkeypatch.setenv("MAX_CHANGED_FIELDS", "8")
+    monkeypatch.setenv("FAIL_ON_DESTROY", "true")
+    monkeypatch.setenv("FAIL_ON_REPLACE", "false")
+
+    with pytest.raises(SystemExit, match="1 delete change"):
+        main()
+
+    assert "`aws_s3_bucket.deleted`" in summary_path.read_text(encoding="utf-8")
+
+
+def test_script_fails_after_summary_when_visible_replace_is_present(
+    tmp_path, monkeypatch
+):
+    plan_path = tmp_path / "tfplan.json"
+    summary_path = tmp_path / "summary.md"
+    plan_path.write_text(
+        json.dumps(
+            {
+                "resource_changes": [
+                    resource_change(
+                        "aws_s3_bucket.replaced",
+                        "aws_s3_bucket",
+                        ["delete", "create"],
+                        {"bucket": "old"},
+                        {"bucket": "new"},
+                    )
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("PLAN_JSON_PATH", str(plan_path))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+    monkeypatch.setenv("IGNORED_TAG_NAMES", "Version")
+    monkeypatch.setenv("FILTER_TAG_ONLY_CHANGES", "true")
+    monkeypatch.setenv("MAX_CHANGED_FIELDS", "8")
+    monkeypatch.setenv("FAIL_ON_DESTROY", "false")
+    monkeypatch.setenv("FAIL_ON_REPLACE", "true")
+
+    with pytest.raises(SystemExit, match="1 replacement change"):
+        main()
+
+    assert "`aws_s3_bucket.replaced`" in summary_path.read_text(encoding="utf-8")

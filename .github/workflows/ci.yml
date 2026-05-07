@@ -13,6 +13,25 @@ permissions:
   contents: read
 
 jobs:
+  workflow-lint:
+    name: Workflow lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
+
+      - name: Run actionlint
+        run: actionlint
+
   python:
     name: Python checks
     runs-on: ubuntu-latest
@@ -143,11 +162,12 @@ jobs:
 
           tag = os.environ["GITHUB_REF_NAME"]
           version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
-          expected = f"v{version}"
+          expected = re.escape(f"v{version}")
+          tag_pattern = rf"{expected}(?:-\d+)?"
 
-          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
-              sys.exit(f"Tag {tag!r} must look like v1.2.3")
-
-          if tag != expected:
-              sys.exit(f"Tag {tag!r} does not match pyproject version {expected!r}")
+          if not re.fullmatch(tag_pattern, tag):
+              sys.exit(
+                  f"Tag {tag!r} must match pyproject version v{version} "
+                  "or use a numeric suffix like v1.2.3-1"
+              )
           PY
