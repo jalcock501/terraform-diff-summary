@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Resolve tag
         id: tag
@@ -35,15 +37,51 @@ jobs:
             tag="$REF_NAME"
           fi
 
+          base_tag="$(printf '%s' "$tag" | sed -E 's/-[0-9]+$//')"
+
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "base_tag=$base_tag" >> "$GITHUB_OUTPUT"
+          if [ "$tag" = "$base_tag" ]; then
+            echo "is_build_tag=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_build_tag=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Promote build tag to release tag
+        if: steps.tag.outputs.is_build_tag == 'true'
+        env:
+          BASE_TAG: ${{ steps.tag.outputs.base_tag }}
+          BUILD_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          git fetch --tags --force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          target="$(git rev-list -n 1 "$BUILD_TAG")"
+
+          if git rev-parse "$BASE_TAG" >/dev/null 2>&1; then
+            existing_target="$(git rev-list -n 1 "$BASE_TAG")"
+            if [ "$existing_target" != "$target" ]; then
+              echo "Refusing to move existing release tag $BASE_TAG."
+              echo "$BASE_TAG points at $existing_target, but $BUILD_TAG points at $target."
+              exit 1
+            fi
+
+            echo "$BASE_TAG already points at $target; promotion is already done."
+            exit 0
+          fi
+
+          git tag -a "$BASE_TAG" "$target" -m "Release $BASE_TAG"
+          git push origin "refs/tags/$BASE_TAG"
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.tag }}
+          TAG: ${{ steps.tag.outputs.base_tag }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; nothing to do."
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --target "$TAG"
             exit 0
           fi
 
@@ -51,3 +89,19 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             --verify-tag
+
+      - name: Delete build release
+        if: steps.tag.outputs.is_build_tag == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if gh release view "$BUILD_TAG" >/dev/null 2>&1; then
+            gh release delete "$BUILD_TAG" --yes
+          fi
+
+      - name: Delete build tag
+        if: steps.tag.outputs.is_build_tag == 'true'
+        env:
+          BUILD_TAG: ${{ steps.tag.outputs.tag }}
+        run: git push origin ":refs/tags/$BUILD_TAG"

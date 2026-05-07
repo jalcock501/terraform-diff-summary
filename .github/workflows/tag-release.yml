@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   tag:
-    name: Create version tag
+    name: Create build tag
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
@@ -49,18 +49,18 @@ jobs:
 
           version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
           print(f"version={version}")
-          print(f"tag=v{version}")
+          print(f"base_tag=v{version}")
           PY
 
-      - name: Resolve release tag
-        id: release_tag
+      - name: Resolve build tag
+        id: build_tag
         env:
-          BASE_TAG: ${{ steps.version.outputs.tag }}
+          BASE_TAG: ${{ steps.version.outputs.base_tag }}
         run: |
           git fetch --tags --force
 
-          tag="$BASE_TAG"
-          suffix=0
+          suffix=1
+          tag="$BASE_TAG-$suffix"
 
           while git rev-parse "$tag" >/dev/null 2>&1; do
             suffix=$((suffix + 1))
@@ -71,10 +71,10 @@ jobs:
 
       - name: Create and push tag
         env:
-          TAG: ${{ steps.release_tag.outputs.tag }}
+          TAG: ${{ steps.build_tag.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" -m "Release $VERSION"
+          git tag -a "$TAG" -m "Build tag for release $VERSION"
           git push origin "$TAG"
