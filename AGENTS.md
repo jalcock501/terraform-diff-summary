@@ -8,7 +8,8 @@ GitHub Step Summary.
 
 The action is intentionally small:
 
-- Runtime code lives in `scripts/terraform_diff_summary.py`.
+- The action entrypoint is `scripts/terraform_diff_summary.py`.
+- Runtime modules live in `scripts/terraform_plan_summary/`.
 - Tests live in `tests/test_terraform_diff_summary.py`.
 - Action metadata lives in `action.yml`.
 - CI workflows live in `.github/workflows/`.
