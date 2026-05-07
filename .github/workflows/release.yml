@@ -1,13 +1,10 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to release, such as v1.0.0
+        description: Build or release tag to publish, such as v1.0.0-1
         required: true
 
 permissions:
@@ -27,16 +24,9 @@ jobs:
       - name: Resolve tag
         id: tag
         env:
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ inputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            tag="$INPUT_TAG"
-          else
-            tag="$REF_NAME"
-          fi
-
+          tag="$INPUT_TAG"
           base_tag="$(printf '%s' "$tag" | sed -E 's/-[0-9]+$//')"
 
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
