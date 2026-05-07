@@ -27,6 +27,8 @@ def main() -> None:
     ignored_tag_names = ignored_tag_names_from_env()
     filter_tag_only_changes = env_bool("FILTER_TAG_ONLY_CHANGES", True)
     max_changed_fields = env_int("MAX_CHANGED_FIELDS", 8)
+    if max_changed_fields < 1:
+        raise SystemExit("MAX_CHANGED_FIELDS must be greater than or equal to 1")
     summary_title = os.environ.get("SUMMARY_TITLE") or "Terraform plan summary"
     fail_on_destroy = env_bool("FAIL_ON_DESTROY", False)
     fail_on_replace = env_bool("FAIL_ON_REPLACE", False)

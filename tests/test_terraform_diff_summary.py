@@ -178,6 +178,44 @@ def test_render_summary_can_disable_tag_only_filtering():
     assert "`tags.Version`" in summary
 
 
+def test_render_summary_respects_explicit_empty_ignored_tag_names():
+    plan = {
+        "resource_changes": [
+            resource_change(
+                "aws_s3_bucket.version_only",
+                "aws_s3_bucket",
+                ["update"],
+                {"tags": {"Name": "same", "Version": "old"}},
+                {"tags": {"Name": "same", "Version": "new"}},
+            ),
+        ]
+    }
+
+    summary = render_summary(plan, "Version", 8, ignored_tag_names=[])
+
+    assert "| Filtered tag-only changes () | 0 |" in summary
+    assert "| Changes shown below | 1 |" in summary
+    assert "`tags.Version`" in summary
+
+
+def test_render_summary_escapes_ignored_tag_names_in_count_table():
+    plan = {
+        "resource_changes": [
+            resource_change(
+                "aws_s3_bucket.example",
+                "aws_s3_bucket",
+                ["update"],
+                {"bucket": "old", "tags": {"Team|Name": "old"}},
+                {"bucket": "new", "tags": {"Team|Name": "new"}},
+            ),
+        ]
+    }
+
+    summary = render_summary(plan, ignored_tag_names=["Team|Name"])
+
+    assert "| Filtered tag-only changes (Team\\|Name) | 0 |" in summary
+
+
 def test_render_summary_groups_visible_changes_by_action():
     plan = {
         "resource_changes": [
@@ -358,3 +396,33 @@ def test_script_fails_after_summary_when_visible_replace_is_present(
         main()
 
     assert "`aws_s3_bucket.replaced`" in summary_path.read_text(encoding="utf-8")
+
+
+def test_script_fails_clearly_for_invalid_max_changed_fields(
+    tmp_path, monkeypatch
+):
+    plan_path = tmp_path / "tfplan.json"
+    summary_path = tmp_path / "summary.md"
+    plan_path.write_text(json.dumps({"resource_changes": []}), encoding="utf-8")
+
+    monkeypatch.setenv("PLAN_JSON_PATH", str(plan_path))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+    monkeypatch.setenv("MAX_CHANGED_FIELDS", "many")
+
+    with pytest.raises(SystemExit, match="Invalid integer value.*MAX_CHANGED_FIELDS"):
+        main()
+
+
+def test_script_fails_clearly_for_non_positive_max_changed_fields(
+    tmp_path, monkeypatch
+):
+    plan_path = tmp_path / "tfplan.json"
+    summary_path = tmp_path / "summary.md"
+    plan_path.write_text(json.dumps({"resource_changes": []}), encoding="utf-8")
+
+    monkeypatch.setenv("PLAN_JSON_PATH", str(plan_path))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+    monkeypatch.setenv("MAX_CHANGED_FIELDS", "0")
+
+    with pytest.raises(SystemExit, match="MAX_CHANGED_FIELDS must be"):
+        main()

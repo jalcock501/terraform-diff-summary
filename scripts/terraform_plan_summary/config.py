@@ -22,7 +22,12 @@ def env_int(name: str, default: int) -> int:
     raw_value = os.environ.get(name)
     if raw_value is None or raw_value == "":
         return default
-    return int(raw_value)
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise SystemExit(
+            f"Invalid integer value for environment variable {name!r}: {raw_value!r}"
+        ) from exc
 
 
 def ignored_tag_names_from_env() -> list[str]:

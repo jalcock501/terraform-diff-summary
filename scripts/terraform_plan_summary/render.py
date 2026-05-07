@@ -36,7 +36,8 @@ def render_summary(
     summary_title: str = "Terraform plan summary",
 ) -> str:
     """Render the Terraform summary Markdown."""
-    ignored_tag_names = ignored_tag_names or [version_tag_name]
+    if ignored_tag_names is None:
+        ignored_tag_names = [version_tag_name]
     ignored_tag_name_set = set(ignored_tag_names)
     changes, filtered, visible = partition_changes(
         plan,
@@ -48,11 +49,13 @@ def render_summary(
     lines = [
         f"### {summary_title}",
         "",
-        "| Field | Count |",
-        "|---|---:|",
-        f"| Resource changes | {len(changes)} |",
-        f"| Filtered tag-only changes ({ignored_tag_label}) | {len(filtered)} |",
-        f"| Changes shown below | {len(visible)} |",
+        markdown_row(["Field", "Count"]),
+        markdown_row(["---", "---:"]),
+        markdown_row(["Resource changes", str(len(changes))]),
+        markdown_row(
+            ["Filtered tag-only changes " f"({ignored_tag_label})", str(len(filtered))]
+        ),
+        markdown_row(["Changes shown below", str(len(visible))]),
         "",
     ]
 
