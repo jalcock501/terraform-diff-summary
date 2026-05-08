@@ -31,17 +31,17 @@ sensitive Terraform values into the Step Summary.
 
 ## Inputs
 
-| Name | Required | Default | Description |
-|---|---:|---|---|
-| `plan-json-path` | yes | n/a | JSON from `terraform show -json tfplan`. |
-| `version-tag-name` | no | `Version` | Legacy single ignored tag key. |
-| `ignored-tag-names` | no | n/a | Comma-separated tag keys to ignore. |
-| `filter-tag-only-changes` | no | `true` | Hide ignored-tag-only updates. |
-| `max-changed-fields` | no | `8` | Field path cap per resource before `...`. |
-| `summary-title` | no | `Terraform plan summary` | Markdown summary heading. |
-| `fail-on-destroy` | no | `false` | Fail when visible delete changes exist. |
-| `fail-on-replace` | no | `false` | Fail when visible replacement changes exist. |
-| `summary-output-path` | no | n/a | Also append Markdown to this file path. |
+| Name                      | Required | Default                  | Description                                  |
+| ------------------------- | -------: | ------------------------ | -------------------------------------------- |
+| `plan-json-path`          |      yes | n/a                      | JSON from `terraform show -json tfplan`.     |
+| `version-tag-name`        |       no | `Version`                | Legacy single ignored tag key.               |
+| `ignored-tag-names`       |       no | n/a                      | Comma-separated tag keys to ignore.          |
+| `filter-tag-only-changes` |       no | `true`                   | Hide ignored-tag-only updates.               |
+| `max-changed-fields`      |       no | `8`                      | Field path cap per resource before `...`.    |
+| `summary-title`           |       no | `Terraform plan summary` | Markdown summary heading.                    |
+| `fail-on-destroy`         |       no | `false`                  | Fail when visible delete changes exist.      |
+| `fail-on-replace`         |       no | `false`                  | Fail when visible replacement changes exist. |
+| `summary-output-path`     |       no | n/a                      | Also append Markdown to this file path.      |
 
 ## Output
 
@@ -49,25 +49,27 @@ The action appends Markdown to `$GITHUB_STEP_SUMMARY`.
 
 Example:
 
+![Screenshot of a larger CDK diff summary in GitHub Step Summary](docs/assets/tfplan-diff-summary-larger-example.png)
+
 ```md
 ### Terraform plan summary
 
-| Field | Count |
-|---|---:|
-| Resource changes | 12 |
-| Filtered tag-only changes (Version, Build) | 9 |
-| Changes shown below | 3 |
+| Field                                      | Count |
+| ------------------------------------------ | ----: |
+| Resource changes                           |    12 |
+| Filtered tag-only changes (Version, Build) |     9 |
+| Changes shown below                        |     3 |
 
 #### Replacements (1)
 
-| Address | Action | Type | Changed fields |
-|---|---|---|---|
+| Address            | Action          | Type           | Changed fields       |
+| ------------------ | --------------- | -------------- | -------------------- |
 | `aws_instance.api` | `delete,create` | `aws_instance` | `ami, instance_type` |
 
 #### Updates (2)
 
-| Address | Action | Type | Changed fields |
-|---|---|---|---|
+| Address               | Action   | Type              | Changed fields  |
+| --------------------- | -------- | ----------------- | --------------- |
 | `aws_ecs_service.api` | `update` | `aws_ecs_service` | `desired_count` |
 ```
 
