@@ -1,0 +1,2576 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.8",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "values": {
+            "cidr_block": "10.60.0.0/16",
+            "tags": {
+              "Environment": "prod"
+            }
+          }
+        },
+        {
+          "address": "aws_lb.app",
+          "mode": "managed",
+          "type": "aws_lb",
+          "name": "app",
+          "values": {
+            "name": "app-alb",
+            "idle_timeout": 120,
+            "enable_deletion_protection": true
+          }
+        },
+        {
+          "address": "aws_ecs_service.app",
+          "mode": "managed",
+          "type": "aws_ecs_service",
+          "name": "app",
+          "values": {
+            "name": "app",
+            "desired_count": 4
+          }
+        }
+      ]
+    },
+    "outputs": {
+      "alb_dns_name": {
+        "sensitive": false,
+        "value": "app-alb-123456.eu-west-2.elb.amazonaws.com"
+      },
+      "service_version": {
+        "sensitive": false,
+        "value": "2026-05-08.7"
+      },
+      "dashboard_url": {
+        "sensitive": false,
+        "value": "https://console.aws.amazon.com/cloudwatch/home#dashboards:name=ops-main"
+      }
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_vpc.main",
+      "mode": "managed",
+      "type": "aws_vpc",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "cidr_block": "10.60.0.0/16",
+          "enable_dns_hostnames": true,
+          "enable_dns_support": true,
+          "tags": {
+            "Environment": "staging",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after": {
+          "cidr_block": "10.60.0.0/16",
+          "enable_dns_hostnames": true,
+          "enable_dns_support": true,
+          "tags": {
+            "Environment": "prod",
+            "ManagedBy": "terraform",
+            "CostCentre": "platform"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_subnet.private[0]",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "cidr_block": "10.60.1.0/24",
+          "availability_zone": "eu-west-2a",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "private-a"
+          }
+        },
+        "after": {
+          "cidr_block": "10.60.11.0/24",
+          "availability_zone": "eu-west-2a",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "private-a",
+            "Tier": "app"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 0
+    },
+    {
+      "address": "aws_subnet.private[1]",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "cidr_block": "10.60.2.0/24",
+          "availability_zone": "eu-west-2b",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "private-b"
+          }
+        },
+        "after": {
+          "cidr_block": "10.60.12.0/24",
+          "availability_zone": "eu-west-2b",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "private-b",
+            "Tier": "app"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 1
+    },
+    {
+      "address": "aws_route_table.private",
+      "mode": "managed",
+      "type": "aws_route_table",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "tags": {
+            "Name": "private-rt"
+          },
+          "route": [
+            {
+              "cidr_block": "0.0.0.0/0",
+              "nat_gateway_id": "nat-001"
+            }
+          ]
+        },
+        "after": {
+          "tags": {
+            "Name": "private-rt",
+            "Owner": "platform"
+          },
+          "route": [
+            {
+              "cidr_block": "0.0.0.0/0",
+              "nat_gateway_id": "nat-002"
+            }
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group.app",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app-sg",
+          "description": "application access",
+          "ingress": [
+            {
+              "from_port": 443,
+              "to_port": 443,
+              "protocol": "tcp",
+              "cidr_blocks": [
+                "10.0.0.0/8"
+              ]
+            }
+          ],
+          "egress": [
+            {
+              "from_port": 0,
+              "to_port": 0,
+              "protocol": "-1",
+              "cidr_blocks": [
+                "0.0.0.0/0"
+              ]
+            }
+          ],
+          "tags": {
+            "Name": "app-sg"
+          }
+        },
+        "after": {
+          "name": "app-sg",
+          "description": "application access",
+          "ingress": [
+            {
+              "from_port": 443,
+              "to_port": 443,
+              "protocol": "tcp",
+              "cidr_blocks": [
+                "10.0.0.0/8"
+              ]
+            },
+            {
+              "from_port": 8443,
+              "to_port": 8443,
+              "protocol": "tcp",
+              "cidr_blocks": [
+                "10.10.0.0/16"
+              ]
+            }
+          ],
+          "egress": [
+            {
+              "from_port": 443,
+              "to_port": 443,
+              "protocol": "tcp",
+              "prefix_list_ids": [
+                "pl-12345678"
+              ]
+            },
+            {
+              "from_port": 5432,
+              "to_port": 5432,
+              "protocol": "tcp",
+              "cidr_blocks": [
+                "10.50.20.10/32"
+              ]
+            }
+          ],
+          "tags": {
+            "Name": "app-sg",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lb.app",
+      "mode": "managed",
+      "type": "aws_lb",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app-alb",
+          "internal": true,
+          "idle_timeout": 60,
+          "enable_deletion_protection": false,
+          "tags": {
+            "Service": "frontend"
+          }
+        },
+        "after": {
+          "name": "app-alb",
+          "internal": true,
+          "idle_timeout": 120,
+          "enable_deletion_protection": true,
+          "tags": {
+            "Service": "frontend",
+            "Environment": "prod"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lb_target_group.app",
+      "mode": "managed",
+      "type": "aws_lb_target_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app-tg",
+          "port": 8000,
+          "protocol": "HTTP",
+          "health_check": [
+            {
+              "path": "/health",
+              "matcher": "200"
+            }
+          ]
+        },
+        "after": {
+          "name": "app-tg",
+          "port": 8000,
+          "protocol": "HTTP",
+          "health_check": [
+            {
+              "path": "/healthz",
+              "matcher": "200-399"
+            }
+          ],
+          "slow_start": 60
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ecs_task_definition.app",
+      "mode": "managed",
+      "type": "aws_ecs_task_definition",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "family": "app-service",
+          "cpu": "512",
+          "memory": "1024",
+          "container_definitions": "[{\"name\":\"app\",\"image\":\"123456789012.dkr.ecr.eu-west-2.amazonaws.com/app:2026-05-01.3\",\"environment\":[{\"name\":\"LOG_LEVEL\",\"value\":\"INFO\"}]}]"
+        },
+        "after": {
+          "family": "app-service",
+          "cpu": "1024",
+          "memory": "2048",
+          "container_definitions": "[{\"name\":\"app\",\"image\":\"123456789012.dkr.ecr.eu-west-2.amazonaws.com/app:2026-05-08.7\",\"environment\":[{\"name\":\"LOG_LEVEL\",\"value\":\"DEBUG\"},{\"name\":\"FEATURE_X_ENABLED\",\"value\":\"true\"},{\"name\":\"ACCESS_LOGS\",\"value\":\"false\"}]}]"
+        },
+        "after_unknown": {
+          "arn": true,
+          "revision": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "cpu"
+          ],
+          [
+            "memory"
+          ],
+          [
+            "container_definitions"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_ecs_service.app",
+      "mode": "managed",
+      "type": "aws_ecs_service",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app",
+          "desired_count": 2,
+          "health_check_grace_period_seconds": 60,
+          "deployment_maximum_percent": 200,
+          "deployment_minimum_healthy_percent": 50
+        },
+        "after": {
+          "name": "app",
+          "desired_count": 4,
+          "health_check_grace_period_seconds": 180,
+          "deployment_maximum_percent": 300,
+          "deployment_minimum_healthy_percent": 100,
+          "enable_execute_command": true
+        },
+        "after_unknown": {
+          "iam_role": true,
+          "task_definition": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_lambda_function.worker[0]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-1",
+          "runtime": "python3.12",
+          "timeout": 20,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-1",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "11"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-1"
+          }
+        },
+        "after": {
+          "function_name": "worker-1",
+          "runtime": "python3.13",
+          "timeout": 35,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-1",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "21",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-1",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 0
+    },
+    {
+      "address": "aws_lambda_function.worker[1]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-2",
+          "runtime": "python3.12",
+          "timeout": 25,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-2",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "12"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-2"
+          }
+        },
+        "after": {
+          "function_name": "worker-2",
+          "runtime": "python3.13",
+          "timeout": 40,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-2",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "22",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-2",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 1
+    },
+    {
+      "address": "aws_lambda_function.worker[2]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-3",
+          "runtime": "python3.12",
+          "timeout": 15,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-3",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "13"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-3"
+          }
+        },
+        "after": {
+          "function_name": "worker-3",
+          "runtime": "python3.13",
+          "timeout": 30,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-3",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "23",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-3",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 2
+    },
+    {
+      "address": "aws_lambda_function.worker[3]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "function_name": "worker-4",
+          "runtime": "python3.12",
+          "timeout": 20,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-4",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "14"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-4"
+          }
+        },
+        "after": {
+          "function_name": "worker-4",
+          "runtime": "python3.13",
+          "timeout": 35,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-4",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "24",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-4",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "architectures"
+          ],
+          [
+            "runtime"
+          ]
+        ]
+      },
+      "index": 3
+    },
+    {
+      "address": "aws_lambda_function.worker[4]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-5",
+          "runtime": "python3.12",
+          "timeout": 25,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-5",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "15"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-5"
+          }
+        },
+        "after": {
+          "function_name": "worker-5",
+          "runtime": "python3.13",
+          "timeout": 40,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-5",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "25",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-5",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 4
+    },
+    {
+      "address": "aws_lambda_function.worker[5]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-6",
+          "runtime": "python3.12",
+          "timeout": 15,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-6",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "16"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-6"
+          }
+        },
+        "after": {
+          "function_name": "worker-6",
+          "runtime": "python3.13",
+          "timeout": 30,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-6",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "26",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-6",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 5
+    },
+    {
+      "address": "aws_lambda_function.worker[6]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-7",
+          "runtime": "python3.12",
+          "timeout": 20,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-7",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "17"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-7"
+          }
+        },
+        "after": {
+          "function_name": "worker-7",
+          "runtime": "python3.13",
+          "timeout": 35,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-7",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "27",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-7",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 6
+    },
+    {
+      "address": "aws_lambda_function.worker[7]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "function_name": "worker-8",
+          "runtime": "python3.12",
+          "timeout": 25,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-8",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "18"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-8"
+          }
+        },
+        "after": {
+          "function_name": "worker-8",
+          "runtime": "python3.13",
+          "timeout": 40,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-8",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "28",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-8",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "architectures"
+          ],
+          [
+            "runtime"
+          ]
+        ]
+      },
+      "index": 7
+    },
+    {
+      "address": "aws_lambda_function.worker[8]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-9",
+          "runtime": "python3.12",
+          "timeout": 15,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-9",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "19"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-9"
+          }
+        },
+        "after": {
+          "function_name": "worker-9",
+          "runtime": "python3.13",
+          "timeout": 30,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-9",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "29",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-9",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 8
+    },
+    {
+      "address": "aws_lambda_function.worker[9]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-10",
+          "runtime": "python3.12",
+          "timeout": 20,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-10",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "20"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-10"
+          }
+        },
+        "after": {
+          "function_name": "worker-10",
+          "runtime": "python3.13",
+          "timeout": 35,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-10",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "30",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-10",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 9
+    },
+    {
+      "address": "aws_lambda_function.worker[10]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "function_name": "worker-11",
+          "runtime": "python3.12",
+          "timeout": 25,
+          "memory_size": 256,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-11",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "21"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-11"
+          }
+        },
+        "after": {
+          "function_name": "worker-11",
+          "runtime": "python3.13",
+          "timeout": 40,
+          "memory_size": 512,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-11",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "31",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-11",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 10
+    },
+    {
+      "address": "aws_lambda_function.worker[11]",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "worker",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "function_name": "worker-12",
+          "runtime": "python3.12",
+          "timeout": 15,
+          "memory_size": 512,
+          "architectures": [
+            "x86_64"
+          ],
+          "source_code_hash": "oldhash-12",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "INFO",
+                "BATCH_SIZE": "22"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-12"
+          }
+        },
+        "after": {
+          "function_name": "worker-12",
+          "runtime": "python3.13",
+          "timeout": 30,
+          "memory_size": 1024,
+          "architectures": [
+            "arm64"
+          ],
+          "source_code_hash": "newhash-12",
+          "environment": [
+            {
+              "variables": {
+                "LOG_LEVEL": "DEBUG",
+                "BATCH_SIZE": "32",
+                "TRACE_ENABLED": "true"
+              }
+            }
+          ],
+          "tags": {
+            "Team": "platform",
+            "Component": "worker-12",
+            "ManagedBy": "terraform"
+          }
+        },
+        "after_unknown": {
+          "arn": true,
+          "last_modified": true,
+          "qualified_arn": true,
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "architectures"
+          ],
+          [
+            "runtime"
+          ]
+        ]
+      },
+      "index": 11
+    },
+    {
+      "address": "aws_iam_role_policy.inline[0]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-1",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-1",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 0
+    },
+    {
+      "address": "aws_iam_role_policy.inline[1]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-2",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-2",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 1
+    },
+    {
+      "address": "aws_iam_role_policy.inline[2]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-3",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-3",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 2
+    },
+    {
+      "address": "aws_iam_role_policy.inline[3]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-4",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-4",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 3
+    },
+    {
+      "address": "aws_iam_role_policy.inline[4]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-5",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-5",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 4
+    },
+    {
+      "address": "aws_iam_role_policy.inline[5]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-6",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-6",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 5
+    },
+    {
+      "address": "aws_iam_role_policy.inline[6]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-7",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-7",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 6
+    },
+    {
+      "address": "aws_iam_role_policy.inline[7]",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "inline",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "inline-8",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\"], \"Resource\": \"*\"}]}"
+        },
+        "after": {
+          "name": "inline-8",
+          "policy": "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Action\": [\"logs:CreateLogStream\", \"logs:PutLogEvents\", \"logs:DescribeLogStreams\", \"cloudwatch:PutMetricData\"], \"Resource\": \"*\"}]}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "index": 7
+    },
+    {
+      "address": "aws_db_parameter_group.app",
+      "mode": "managed",
+      "type": "aws_db_parameter_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app-pg",
+          "family": "postgres15",
+          "parameter": [
+            {
+              "name": "log_min_duration_statement",
+              "value": "500"
+            }
+          ]
+        },
+        "after": {
+          "name": "app-pg",
+          "family": "postgres15",
+          "parameter": [
+            {
+              "name": "log_min_duration_statement",
+              "value": "250"
+            },
+            {
+              "name": "shared_preload_libraries",
+              "value": "pg_stat_statements"
+            }
+          ]
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_db_instance.app",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "identifier": "app-db",
+          "instance_class": "db.t4g.medium",
+          "allocated_storage": 100,
+          "backup_retention_period": 7,
+          "performance_insights_enabled": false
+        },
+        "after": {
+          "identifier": "app-db",
+          "instance_class": "db.t4g.large",
+          "allocated_storage": 150,
+          "backup_retention_period": 14,
+          "performance_insights_enabled": true
+        },
+        "after_unknown": {
+          "address": true,
+          "arn": true,
+          "hosted_zone_id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_sqs_queue.events",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "events",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "events",
+          "visibility_timeout_seconds": 30,
+          "message_retention_seconds": 345600
+        },
+        "after": {
+          "name": "events",
+          "visibility_timeout_seconds": 60,
+          "message_retention_seconds": 1209600,
+          "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:eu-west-2:123456789012:events-dlq\",\"maxReceiveCount\":5}"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_sqs_queue.events_dlq",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "events_dlq",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "events-dlq",
+          "message_retention_seconds": 1209600,
+          "kms_master_key_id": "alias/aws/sqs"
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true,
+          "url": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.service_version",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "service_version",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "/platform/prod/service-version",
+          "type": "String",
+          "value": "2026-05-01.3"
+        },
+        "after": {
+          "name": "/platform/prod/service-version",
+          "type": "String",
+          "value": "2026-05-08.7"
+        },
+        "after_unknown": {
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.high_5xx",
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "high_5xx",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "alarm_name": "high-5xx",
+          "threshold": 5,
+          "evaluation_periods": 3,
+          "treat_missing_data": "missing"
+        },
+        "after": {
+          "alarm_name": "high-5xx",
+          "threshold": 2,
+          "evaluation_periods": 2,
+          "treat_missing_data": "notBreaching"
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.response_time_p95",
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "response_time_p95",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "alarm_name": "response-time-p95",
+          "comparison_operator": "GreaterThanThreshold",
+          "threshold": 1.5,
+          "evaluation_periods": 5,
+          "extended_statistic": "p95"
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_group.app",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "/aws/ecs/app",
+          "retention_in_days": 14,
+          "tags": {
+            "Service": "app"
+          }
+        },
+        "after": {
+          "name": "/aws/ecs/app",
+          "retention_in_days": 90,
+          "tags": {
+            "Service": "app",
+            "Environment": "prod"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_dashboard.ops",
+      "mode": "managed",
+      "type": "aws_cloudwatch_dashboard",
+      "name": "ops",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "dashboard_name": "ops-main",
+          "dashboard_body": "{\"widgets\": [{\"type\": \"metric\", \"x\": 0, \"y\": 0, \"width\": 12, \"height\": 6, \"properties\": {\"title\": \"5xx\", \"metrics\": [[\"AWS/ApplicationELB\", \"HTTPCode_Target_5XX_Count\"]]}}]}"
+        },
+        "after_unknown": {
+          "dashboard_arn": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_event_rule.nightly_reconcile",
+      "mode": "managed",
+      "type": "aws_cloudwatch_event_rule",
+      "name": "nightly_reconcile",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "nightly-reconcile",
+          "schedule_expression": "cron(0 2 * * ? *)",
+          "is_enabled": true
+        },
+        "after": {
+          "name": "nightly-reconcile",
+          "schedule_expression": "cron(0/30 * * * ? *)",
+          "is_enabled": true
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "random_id.release",
+      "mode": "managed",
+      "type": "random_id",
+      "name": "release",
+      "provider_name": "registry.terraform.io/hashicorp/random",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "byte_length": 4,
+          "hex": "ab12cd34"
+        },
+        "after": {
+          "byte_length": 4
+        },
+        "after_unknown": {
+          "b64_url": true,
+          "dec": true,
+          "hex": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "keepers",
+            "image_tag"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "null_resource.redeploy_marker",
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "redeploy_marker",
+      "provider_name": "registry.terraform.io/hashicorp/null",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "triggers": {
+            "image_tag": "2026-05-01.3",
+            "config_checksum": "oldsum"
+          }
+        },
+        "after": {
+          "triggers": {
+            "image_tag": "2026-05-08.7",
+            "config_checksum": "newsum"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "triggers"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_1",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_1",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-1",
+          "priority": 1
+        },
+        "after": {
+          "name": "item-1",
+          "priority": 11,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_2",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_2",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-2",
+          "priority": 12,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_metric_filter.synthetic_3",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "synthetic_3",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-3",
+          "priority": 3
+        },
+        "after": {
+          "name": "item-3",
+          "priority": 13,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_metric_filter.synthetic_4",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "synthetic_4",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-4",
+          "priority": 4
+        },
+        "after": {
+          "name": "item-4",
+          "priority": 14,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_5",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_5",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-5",
+          "priority": 5
+        },
+        "after": {
+          "name": "item-5",
+          "priority": 15,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_metric_filter.synthetic_6",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "synthetic_6",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-6",
+          "priority": 6
+        },
+        "after": {
+          "name": "item-6",
+          "priority": 16,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_7",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_7",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-7",
+          "priority": 17,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_8",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_8",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-8",
+          "priority": 8
+        },
+        "after": {
+          "name": "item-8",
+          "priority": 18,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_9",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_9",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-9",
+          "priority": 19,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_10",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_10",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-10",
+          "priority": 10
+        },
+        "after": {
+          "name": "item-10",
+          "priority": 20,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_11",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_11",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-11",
+          "priority": 11
+        },
+        "after": {
+          "name": "item-11",
+          "priority": 21,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_12",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_12",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-12",
+          "priority": 12
+        },
+        "after": {
+          "name": "item-12",
+          "priority": 22,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_13",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_13",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-13",
+          "priority": 13
+        },
+        "after": {
+          "name": "item-13",
+          "priority": 23,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_14",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_14",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-14",
+          "priority": 14
+        },
+        "after": {
+          "name": "item-14",
+          "priority": 24,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_metric_filter.synthetic_15",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "synthetic_15",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-15",
+          "priority": 25,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_16",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_16",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-16",
+          "priority": 26,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_log_metric_filter.synthetic_17",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_metric_filter",
+      "name": "synthetic_17",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-17",
+          "priority": 17
+        },
+        "after": {
+          "name": "item-17",
+          "priority": 27,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_18",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_18",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-18",
+          "priority": 18
+        },
+        "after": {
+          "name": "item-18",
+          "priority": 28,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_19",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_19",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-19",
+          "priority": 19
+        },
+        "after": {
+          "name": "item-19",
+          "priority": 29,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_20",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_20",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-20",
+          "priority": 20
+        },
+        "after": {
+          "name": "item-20",
+          "priority": 30,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_21",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_21",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "name": "item-21",
+          "priority": 31,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group_rule.synthetic_22",
+      "mode": "managed",
+      "type": "aws_security_group_rule",
+      "name": "synthetic_22",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-22",
+          "priority": 22
+        },
+        "after": {
+          "name": "item-22",
+          "priority": 32,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_23",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_23",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-23",
+          "priority": 23
+        },
+        "after": {
+          "name": "item-23",
+          "priority": 33,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.synthetic_24",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "synthetic_24",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "item-24",
+          "priority": 24
+        },
+        "after": {
+          "name": "item-24",
+          "priority": 34,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "name"
+          ]
+        ]
+      }
+    },
+    {
+      "address": "aws_appautoscaling_policy.synthetic_25",
+      "mode": "managed",
+      "type": "aws_appautoscaling_policy",
+      "name": "synthetic_25",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "item-25",
+          "priority": 25
+        },
+        "after": {
+          "name": "item-25",
+          "priority": 35,
+          "enabled": true
+        },
+        "after_unknown": {
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "output_changes": {
+    "alb_dns_name": {
+      "actions": [
+        "update"
+      ],
+      "before": "app-alb-654321.eu-west-2.elb.amazonaws.com",
+      "after": "app-alb-123456.eu-west-2.elb.amazonaws.com",
+      "after_unknown": false
+    },
+    "service_version": {
+      "actions": [
+        "update"
+      ],
+      "before": "2026-05-01.3",
+      "after": "2026-05-08.7",
+      "after_unknown": false
+    },
+    "dashboard_url": {
+      "actions": [
+        "create"
+      ],
+      "before": null,
+      "after": "https://console.aws.amazon.com/cloudwatch/home#dashboards:name=ops-main",
+      "after_unknown": false
+    }
+  },
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.8"
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0"
+      },
+      "random": {
+        "name": "random",
+        "full_name": "registry.terraform.io/hashicorp/random",
+        "version_constraint": "~> 3.0"
+      },
+      "null": {
+        "name": "null",
+        "full_name": "registry.terraform.io/hashicorp/null",
+        "version_constraint": "~> 3.0"
+      }
+    }
+  },
+  "relevant_attributes": [
+    {
+      "resource": "aws_ecs_task_definition.app",
+      "attribute": [
+        "container_definitions"
+      ]
+    },
+    {
+      "resource": "aws_db_instance.app",
+      "attribute": [
+        "instance_class"
+      ]
+    },
+    {
+      "resource": "aws_security_group.app",
+      "attribute": [
+        "ingress"
+      ]
+    }
+  ],
+  "timestamp": "2026-05-08T12:15:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false,
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "summary": "Value for undeclared variable",
+      "detail": "A variable named \"legacy_mode\" was supplied but is not declared in the root module."
+    },
+    {
+      "severity": "warning",
+      "summary": "Deprecated attribute",
+      "detail": "The attribute \"overwrite\" is deprecated in aws_ssm_parameter and will be removed in a future provider version."
+    }
+  ]
+}
