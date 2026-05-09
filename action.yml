@@ -41,6 +41,14 @@ inputs:
     description: Optional path to also append the generated Markdown summary
     required: false
     default: ""
+  comment-on-pr:
+    description: Whether to create or update a pull request comment
+    required: false
+    default: "false"
+  comment-title:
+    description: Heading used to identify and update the pull request comment
+    required: false
+    default: Terraform diff summary
 
 runs:
   using: composite
@@ -57,4 +65,7 @@ runs:
         FAIL_ON_DESTROY: ${{ inputs.fail-on-destroy }}
         FAIL_ON_REPLACE: ${{ inputs.fail-on-replace }}
         SUMMARY_OUTPUT_PATH: ${{ inputs.summary-output-path }}
+        COMMENT_ON_PR: ${{ inputs.comment-on-pr }}
+        COMMENT_TITLE: ${{ inputs.comment-title }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: python "$GITHUB_ACTION_PATH/scripts/terraform_diff_summary.py"

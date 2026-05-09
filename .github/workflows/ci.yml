@@ -60,6 +60,9 @@ jobs:
   action-smoke:
     name: Action smoke test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -142,6 +145,54 @@ jobs:
           if grep -F "aws_s3_bucket.noop" "$RUNNER_TEMP/action-summary.md"; then
             exit 1
           fi
+
+      - name: Run PR comment smoke action
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: ./
+        with:
+          plan-json-path: ${{ runner.temp }}/tfplan.json
+          ignored-tag-names: Version
+          max-changed-fields: "8"
+          comment-on-pr: "true"
+          comment-title: Terraform diff summary smoke test
+          summary-output-path: ${{ runner.temp }}/pr-comment-action-summary.md
+
+      - name: Assert PR comment smoke result
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          repo = os.environ["REPO"]
+          pr_number = os.environ["PR_NUMBER"]
+          token = os.environ["GH_TOKEN"]
+          url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
+          request = urllib.request.Request(
+              url,
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {token}",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+
+          with urllib.request.urlopen(request, timeout=30) as response:
+              comments = json.loads(response.read().decode("utf-8"))
+
+          expected = "## Terraform diff summary smoke test"
+          if not any(expected in comment.get("body", "") for comment in comments):
+              raise SystemExit("PR smoke-test comment was not found.")
+          PY
 
       - name: Run noisy fixture action
         uses: ./
