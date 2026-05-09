@@ -60,9 +60,6 @@ jobs:
   action-smoke:
     name: Action smoke test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
 
     steps:
       - name: Checkout
@@ -146,10 +143,67 @@ jobs:
             exit 1
           fi
 
+      - name: Run noisy fixture action
+        uses: ./
+        with:
+          plan-json-path: example_tfplan/tfplan-json-noisy-sanitized.json
+          ignored-tag-names: Version
+          max-changed-fields: "8"
+          summary-output-path: ${{ runner.temp }}/noisy-action-summary.md
+
+      - name: Assert noisy fixture summary
+        run: |
+          test -f "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "| Resource changes | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "| Changes shown below | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Replacements (16)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Creates (9)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Updates (41)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "\`aws_ecs_task_definition.app\`" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "\`container_definitions, cpu, memory\`" "$RUNNER_TEMP/noisy-action-summary.md"
+
+  pr-comment-smoke:
+    name: PR comment smoke test
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Write sample Terraform plan JSON
+        run: |
+          cat > "$RUNNER_TEMP/tfplan.json" <<'JSON'
+          {
+            "resource_changes": [
+              {
+                "address": "aws_s3_bucket.material",
+                "type": "aws_s3_bucket",
+                "change": {
+                  "actions": ["update"],
+                  "before": {
+                    "bucket": "old"
+                  },
+                  "after": {
+                    "bucket": "new"
+                  }
+                }
+              }
+            ]
+          }
+          JSON
+
       - name: Run PR comment smoke action
-        if: >-
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
         uses: ./
         with:
           plan-json-path: ${{ runner.temp }}/tfplan.json
@@ -160,9 +214,6 @@ jobs:
           summary-output-path: ${{ runner.temp }}/pr-comment-action-summary.md
 
       - name: Assert PR comment smoke result
-        if: >-
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -193,25 +244,6 @@ jobs:
           if not any(expected in comment.get("body", "") for comment in comments):
               raise SystemExit("PR smoke-test comment was not found.")
           PY
-
-      - name: Run noisy fixture action
-        uses: ./
-        with:
-          plan-json-path: example_tfplan/tfplan-json-noisy-sanitized.json
-          ignored-tag-names: Version
-          max-changed-fields: "8"
-          summary-output-path: ${{ runner.temp }}/noisy-action-summary.md
-
-      - name: Assert noisy fixture summary
-        run: |
-          test -f "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "| Resource changes | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "| Changes shown below | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "#### Replacements (16)" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "#### Creates (9)" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "#### Updates (41)" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "\`aws_ecs_task_definition.app\`" "$RUNNER_TEMP/noisy-action-summary.md"
-          grep -F "\`container_definitions, cpu, memory\`" "$RUNNER_TEMP/noisy-action-summary.md"
 
   tag:
     name: Tag validation

@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
 
 DEFAULT_COMMENT_TITLE = "Terraform diff summary"
 
@@ -37,7 +38,15 @@ def pull_request_number_from_event(event_path: str | None) -> int | None:
     if not event_path:
         return None
 
-    event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+    try:
+        event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise SystemExit(f"Could not read GitHub event payload {event_path!r}.") from exc
+    except json.JSONDecodeError as exc:
+        raise SystemExit(
+            f"Could not parse GitHub event payload {event_path!r} as JSON."
+        ) from exc
+
     pull_request = event.get("pull_request")
     if isinstance(pull_request, dict) and pull_request.get("number") is not None:
         return int(pull_request["number"])
@@ -82,6 +91,43 @@ def github_request(
     return json.loads(response_body)
 
 
+def list_pull_request_comments(
+    *,
+    repo: str,
+    pull_request_number: int,
+    token: str,
+    comment_title: str,
+    api_url: str = "https://api.github.com",
+) -> list[dict[str, Any]]:
+    collected_comments = []
+    page = 1
+
+    while True:
+        query = urlencode(
+            {
+                "per_page": "100",
+                "page": str(page),
+                "sort": "updated",
+                "direction": "desc",
+            }
+        )
+        comments_url = (
+            f"{api_url}/repos/{repo}/issues/{pull_request_number}/comments?{query}"
+        )
+        comments = github_request("GET", comments_url, token)
+        if not comments:
+            return collected_comments
+
+        collected_comments.extend(comments)
+        if find_existing_comment(comments, comment_title):
+            return collected_comments
+
+        if len(comments) < 100:
+            return collected_comments
+
+        page += 1
+
+
 def upsert_pull_request_comment(
     *,
     repo: str,
@@ -91,10 +137,13 @@ def upsert_pull_request_comment(
     summary: str,
     api_url: str = "https://api.github.com",
 ) -> str:
-    comments_url = (
-        f"{api_url}/repos/{repo}/issues/{pull_request_number}/comments?per_page=100"
+    comments = list_pull_request_comments(
+        repo=repo,
+        pull_request_number=pull_request_number,
+        token=token,
+        comment_title=comment_title,
+        api_url=api_url,
     )
-    comments = github_request("GET", comments_url, token)
     body = build_comment_body(comment_title, summary)
     existing_comment = find_existing_comment(comments, comment_title)
 
@@ -111,7 +160,9 @@ def upsert_pull_request_comment(
 def post_pull_request_comment_from_env(summary: str, comment_title: str) -> None:
     token = os.environ.get("GITHUB_TOKEN")
     repo = os.environ.get("GITHUB_REPOSITORY")
-    pull_request_number = pull_request_number_from_event(os.environ.get("GITHUB_EVENT_PATH"))
+    pull_request_number = pull_request_number_from_event(
+        os.environ.get("GITHUB_EVENT_PATH")
+    )
 
     if not token:
         raise SystemExit("COMMENT_ON_PR requires GITHUB_TOKEN to be available.")
