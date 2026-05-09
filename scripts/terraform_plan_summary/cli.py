@@ -14,6 +14,10 @@ from terraform_plan_summary.config import (
     ignored_tag_names_from_env,
 )
 from terraform_plan_summary.policy import failure_message
+from terraform_plan_summary.pr_comment import (
+    DEFAULT_COMMENT_TITLE,
+    post_pull_request_comment_from_env,
+)
 from terraform_plan_summary.render import render_summary
 
 
@@ -32,6 +36,8 @@ def main() -> None:
     summary_title = os.environ.get("SUMMARY_TITLE") or "Terraform plan summary"
     fail_on_destroy = env_bool("FAIL_ON_DESTROY", False)
     fail_on_replace = env_bool("FAIL_ON_REPLACE", False)
+    comment_on_pr = env_bool("COMMENT_ON_PR", False)
+    comment_title = os.environ.get("COMMENT_TITLE") or DEFAULT_COMMENT_TITLE
 
     plan = json.loads(plan_json_path.read_text(encoding="utf-8"))
     summary = render_summary(
@@ -48,6 +54,9 @@ def main() -> None:
     summary_output_path = os.environ.get("SUMMARY_OUTPUT_PATH")
     if summary_output_path:
         append_summary(Path(summary_output_path), summary)
+
+    if comment_on_pr:
+        post_pull_request_comment_from_env(summary, comment_title)
 
     shown_changes = visible_changes(
         plan,

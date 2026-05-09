@@ -27,29 +27,44 @@ sensitive Terraform values into the Step Summary.
     plan-json-path: tfplan.json
     ignored-tag-names: Version,Build
     fail-on-replace: "true"
+    comment-on-pr: "true"
 ```
 
 ## Inputs
 
-| Name                      | Required | Default                  | Description                                  |
-| ------------------------- | -------: | ------------------------ | -------------------------------------------- |
-| `plan-json-path`          |      yes | n/a                      | JSON from `terraform show -json tfplan`.     |
-| `version-tag-name`        |       no | `Version`                | Legacy single ignored tag key.               |
-| `ignored-tag-names`       |       no | n/a                      | Comma-separated tag keys to ignore.          |
-| `filter-tag-only-changes` |       no | `true`                   | Hide ignored-tag-only updates.               |
-| `max-changed-fields`      |       no | `8`                      | Field path cap per resource before `...`.    |
-| `summary-title`           |       no | `Terraform plan summary` | Markdown summary heading.                    |
-| `fail-on-destroy`         |       no | `false`                  | Fail when visible delete changes exist.      |
-| `fail-on-replace`         |       no | `false`                  | Fail when visible replacement changes exist. |
-| `summary-output-path`     |       no | n/a                      | Also append Markdown to this file path.      |
+| Name | Required | Default | Description |
+|---|---:|---|---|
+| `plan-json-path` | yes | n/a | JSON from `terraform show -json tfplan`. |
+| `version-tag-name` | no | `Version` | Legacy single ignored tag key. |
+| `ignored-tag-names` | no | n/a | Comma-separated tag keys to ignore. |
+| `filter-tag-only-changes` | no | `true` | Hide ignored-tag-only updates. |
+| `max-changed-fields` | no | `8` | Field path cap per resource before `...`. |
+| `summary-title` | no | `Terraform plan summary` | Markdown summary heading. |
+| `fail-on-destroy` | no | `false` | Fail when visible delete changes exist. |
+| `fail-on-replace` | no | `false` | Fail when visible replacements exist. |
+| `summary-output-path` | no | n/a | Also append Markdown to this file path. |
+| `comment-on-pr` | no | `false` | Create or update a pull request comment. |
+| `comment-title` | no | `Terraform diff summary` | PR comment heading. |
 
 ## Output
 
 The action appends Markdown to `$GITHUB_STEP_SUMMARY`.
 
+When `comment-on-pr` is `true`, the action also creates or updates a single
+marked pull request comment. The workflow must grant `pull-requests: write`:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+```
+
 Example:
 
-![Screenshot of a larger CDK diff summary in GitHub Step Summary](docs/assets/tfplan-diff-summary-larger-example.png)
+![Screenshot of a larger Terraform diff summary](docs/assets/tfplan-diff-summary-larger-example.png)
+
+PR Comment example:
+![Screenshot of a PR Comment Terraform diff summary](docs/assets/tfplan-diff-summary-comment.png)
 
 ```md
 ### Terraform plan summary
@@ -91,6 +106,8 @@ MAX_CHANGED_FIELDS=8 \
 SUMMARY_TITLE="Terraform plan summary" \
 FAIL_ON_DESTROY=false \
 FAIL_ON_REPLACE=true \
+COMMENT_ON_PR=false \
+COMMENT_TITLE="Terraform diff summary" \
 GITHUB_STEP_SUMMARY=/tmp/summary.md \
 python scripts/terraform_diff_summary.py
 ```
