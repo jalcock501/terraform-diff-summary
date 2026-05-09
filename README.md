@@ -63,6 +63,9 @@ Example:
 
 ![Screenshot of a larger Terraform diff summary](docs/assets/tfplan-diff-summary-larger-example.png)
 
+PR Comment example:
+![Screenshot of a PR Comment Terraform diff summary](docs/assets/tfplan-diff-summary-comment.png)
+
 ```md
 ### Terraform plan summary
 
