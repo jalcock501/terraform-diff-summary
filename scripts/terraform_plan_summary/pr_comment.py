@@ -12,6 +12,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 DEFAULT_COMMENT_TITLE = "Terraform diff summary"
+MAX_ERROR_BODY_LENGTH = 300
 
 
 def comment_marker(comment_title: str) -> str:
@@ -85,10 +86,26 @@ def github_request(
             f"GitHub API request failed: {method} {url} returned "
             f"{exc.code}: {error_body}"
         ) from exc
+    except urllib.error.URLError as exc:
+        reason = exc.reason if exc.reason is not None else "network error"
+        raise SystemExit(
+            f"GitHub API request failed: {method} {url}: {reason}"
+        ) from exc
+    except TimeoutError as exc:
+        raise SystemExit(f"GitHub API request timed out: {method} {url}") from exc
 
     if not response_body:
         return None
-    return json.loads(response_body)
+
+    try:
+        return json.loads(response_body)
+    except json.JSONDecodeError as exc:
+        snippet = response_body[:MAX_ERROR_BODY_LENGTH]
+        if len(response_body) > MAX_ERROR_BODY_LENGTH:
+            snippet += "..."
+        raise SystemExit(
+            f"GitHub API response was not valid JSON: {method} {url}: {snippet!r}"
+        ) from exc
 
 
 def list_pull_request_comments(

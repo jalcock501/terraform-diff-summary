@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import urllib.error
 
 import pytest
 
@@ -8,6 +9,7 @@ from terraform_plan_summary.pr_comment import (
     build_comment_body,
     comment_marker,
     find_existing_comment,
+    github_request,
     list_pull_request_comments,
     post_pull_request_comment_from_env,
     pull_request_number_from_event,
@@ -164,6 +166,46 @@ def test_upsert_pull_request_comment_updates_existing(monkeypatch) -> None:
     assert calls[1][0] == "PATCH"
     assert calls[1][1] == "https://api.example.test/comment/1"
     assert calls[1][3]["body"].endswith("new")
+
+
+def test_github_request_fails_clearly_for_network_errors(monkeypatch) -> None:
+    def fake_urlopen(request, timeout):
+        raise urllib.error.URLError("connection refused")
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    with pytest.raises(SystemExit, match="connection refused"):
+        github_request("GET", "https://api.example.test/comments", "token")
+
+
+def test_github_request_fails_clearly_for_timeouts(monkeypatch) -> None:
+    def fake_urlopen(request, timeout):
+        raise TimeoutError
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    with pytest.raises(SystemExit, match="timed out"):
+        github_request("GET", "https://api.example.test/comments", "token")
+
+
+def test_github_request_fails_clearly_for_invalid_json(monkeypatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+        def read(self):
+            return b"not-json"
+
+    def fake_urlopen(request, timeout):
+        return FakeResponse()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    with pytest.raises(SystemExit, match="not valid JSON"):
+        github_request("GET", "https://api.example.test/comments", "token")
 
 
 def test_post_pull_request_comment_from_env_requires_token(monkeypatch) -> None:
