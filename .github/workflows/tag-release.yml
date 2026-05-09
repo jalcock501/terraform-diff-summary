@@ -78,3 +78,19 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "Build tag for release $VERSION"
           git push origin "$TAG"
+
+      - name: Write tag summary
+        env:
+          TAG: ${{ steps.build_tag.outputs.tag }}
+          BASE_TAG: ${{ steps.version.outputs.base_tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "## Tag Release"
+            echo
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Created build tag | \`$TAG\` |"
+            echo "| Release version | \`$VERSION\` |"
+            echo "| Release tag to promote | \`$BASE_TAG\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
