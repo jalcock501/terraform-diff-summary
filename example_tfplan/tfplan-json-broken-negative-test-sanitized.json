@@ -1,0 +1,152 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.8",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.example",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "example",
+          "values": {
+            "instance_type": "t3.micro"
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.example",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "example",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": {
+          "instance_type": "t3.nano"
+        },
+        "after": {
+          "instance_type": "t3.micro"
+        },
+        "after_unknown": {
+          "arn": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_security_group.example",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "example",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "name": "sg-old"
+        },
+        "after": {
+          "name": "sg-new"
+        },
+        "replace_paths": [
+          "name"
+        ],
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "null_resource.example",
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "example",
+      "provider_name": "registry.terraform.io/hashicorp/null",
+      "change": {
+        "actions": [
+          "replace"
+        ],
+        "before": {
+          "triggers": {
+            "a": "1"
+          }
+        },
+        "after": {
+          "triggers": {
+            "a": "2"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.secretish",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "secretish",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "/app/example",
+          "value": "old"
+        },
+        "after": {
+          "name": "/app/example",
+          "value": "new"
+        },
+        "after_unknown": {
+          "version": true
+        },
+        "before_sensitive": {
+          "value": true
+        },
+        "after_sensitive": false
+      }
+    }
+  ],
+  "output_changes": {
+    "endpoint": {
+      "actions": [
+        "update"
+      ],
+      "before": "old.example.invalid",
+      "after": {
+        "host": "new.example.invalid"
+      },
+      "after_unknown": false
+    }
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0"
+      }
+    }
+  },
+  "timestamp": "2026-05-08T12:40:00Z",
+  "applyable": false,
+  "complete": false,
+  "errored": false,
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "summary": "Malformed fixture",
+      "detail": "This file is intentionally awkward and partially inconsistent for negative parser tests."
+    }
+  ]
+}

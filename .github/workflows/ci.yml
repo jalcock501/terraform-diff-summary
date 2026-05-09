@@ -143,6 +143,25 @@ jobs:
             exit 1
           fi
 
+      - name: Run noisy fixture action
+        uses: ./
+        with:
+          plan-json-path: example_tfplan/tfplan-json-noisy-sanitized.json
+          ignored-tag-names: Version
+          max-changed-fields: "8"
+          summary-output-path: ${{ runner.temp }}/noisy-action-summary.md
+
+      - name: Assert noisy fixture summary
+        run: |
+          test -f "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "| Resource changes | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "| Changes shown below | 66 |" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Replacements (16)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Creates (9)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "#### Updates (41)" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "\`aws_ecs_task_definition.app\`" "$RUNNER_TEMP/noisy-action-summary.md"
+          grep -F "\`container_definitions, cpu, memory\`" "$RUNNER_TEMP/noisy-action-summary.md"
+
   tag:
     name: Tag validation
     runs-on: ubuntu-latest

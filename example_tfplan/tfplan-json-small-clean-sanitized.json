@@ -1,0 +1,165 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.8",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_ecs_service.app",
+          "mode": "managed",
+          "type": "aws_ecs_service",
+          "name": "app",
+          "values": {
+            "name": "app",
+            "desired_count": 3
+          }
+        }
+      ]
+    },
+    "outputs": {
+      "service_version": {
+        "sensitive": false,
+        "value": "2026-05-08.2"
+      }
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_cloudwatch_log_group.app",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "/aws/ecs/app",
+          "retention_in_days": 14,
+          "tags": {
+            "Service": "app"
+          }
+        },
+        "after": {
+          "name": "/aws/ecs/app",
+          "retention_in_days": 30,
+          "tags": {
+            "Service": "app",
+            "Environment": "dev"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ssm_parameter.service_version",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "service_version",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "/platform/dev/service-version",
+          "type": "String",
+          "value": "2026-05-01.1"
+        },
+        "after": {
+          "name": "/platform/dev/service-version",
+          "type": "String",
+          "value": "2026-05-08.2"
+        },
+        "after_unknown": {
+          "version": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.response_time_p95",
+      "mode": "managed",
+      "type": "aws_cloudwatch_metric_alarm",
+      "name": "response_time_p95",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "alarm_name": "response-time-p95",
+          "comparison_operator": "GreaterThanThreshold",
+          "threshold": 1.5,
+          "evaluation_periods": 5
+        },
+        "after_unknown": {
+          "arn": true,
+          "id": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_ecs_service.app",
+      "mode": "managed",
+      "type": "aws_ecs_service",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "name": "app",
+          "desired_count": 2,
+          "deployment_minimum_healthy_percent": 50
+        },
+        "after": {
+          "name": "app",
+          "desired_count": 3,
+          "deployment_minimum_healthy_percent": 100
+        },
+        "after_unknown": {
+          "task_definition": true
+        },
+        "before_sensitive": false,
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "output_changes": {
+    "service_version": {
+      "actions": [
+        "update"
+      ],
+      "before": "2026-05-01.1",
+      "after": "2026-05-08.2",
+      "after_unknown": false
+    }
+  },
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.9.8"
+  },
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "version_constraint": "~> 5.0"
+      }
+    }
+  },
+  "timestamp": "2026-05-08T12:30:00Z",
+  "applyable": true,
+  "complete": true,
+  "errored": false,
+  "diagnostics": []
+}
