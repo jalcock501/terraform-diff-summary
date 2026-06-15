@@ -24,4 +24,4 @@ test = "scripts.run_tests:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.1.0"
-ruff = "^0.15.16"
+ruff = "^0.15.17"
