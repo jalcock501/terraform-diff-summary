@@ -23,5 +23,5 @@ packages = [{ include = "scripts" }]
 test = "scripts.run_tests:main"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^9.1.0"
+pytest = "^9.1.1"
 ruff = "^0.15.17"
